@@ -17,22 +17,22 @@ Page
     property int hits: 0
     property int misses: 0
 
-    Sensors.Accelerometer
-    {
-        id: accel
-        dataRate: 100
-        active: applicationActive && page.status === PageStatus.Active
+//    Sensors.Accelerometer
+//    {
+//        id: accel
+//        dataRate: 100
+//        active: applicationActive && page.status === PageStatus.Active
 
-        onReadingChanged:
-        {
-            roll = calcRoll(accel.reading.x, accel.reading.y, accel.reading.z)
-            pitch = calcPitch(accel.reading.x, accel.reading.y, accel.reading.z)
+//        onReadingChanged:
+//        {
+//            roll = calcRoll(accel.reading.x, accel.reading.y, accel.reading.z)
+//            pitch = calcPitch(accel.reading.x, accel.reading.y, accel.reading.z)
 
-            var newX = target.x + pitch * -0.125
-            if (newX > 0 && newX < page.width-target.width)
-                target.x = newX
-        }
-    }
+//            var newX = targetImage.x + pitch * -0.125
+//            if (newX > 0 && newX < page.width-targetImage.width)
+//                targetImage.x = newX
+//        }
+//    }
 
 
     function randomNumber(from, to)
@@ -72,26 +72,77 @@ Page
             }
         }
 
-        contentHeight: column.height
+        contentHeight: page.height
 
-        Column
+        Label
         {
-            id: column
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            text: roll.toFixed(2) + " " + pitch.toFixed(2)
+            z:2
+        }
 
-            width: page.width
-            spacing: Theme.paddingSmall
-            PageHeader
-            {
-                title: "Target practice"
-            }
-            
-            Label
-            {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: roll.toFixed(2) + " " + pitch.toFixed(2)
-            }
+        Media.VideoOutput
+        {
+            id: videoPreview
+            source: camera
+            width: page.height
+            anchors.centerIn: parent
+            rotation: -90
+            z: 1
+        }
+
+        Image
+        {
+            id: grinch
+            source: "../images/grinch.png"
+            x: 10
+            y: 10
+            z: 2
+        }
+
+        ShaderEffect
+        {
+            id: shader
+
+            anchors.centerIn: parent
+            height: page.width
+            width: page.height
+            rotation: -90
+
+            property variant videoSource: ShaderEffectSource { sourceItem: videoPreview; hideSource: true }
+
+            smooth: false /* afaik this sets GL_NEAREST  (true sets GL_LINEAR) */
+
+            fragmentShader:
+                "
+                varying highp vec2 qt_TexCoord0;
+
+                uniform sampler2D videoSource;
+
+                void main()
+                {
+                    gl_FragColor =  texture2D(videoSource, qt_TexCoord0);
+                }
+                "
+        }
+
+
+    }
+    Media.Camera
+    {
+        id: camera
+        flash.mode: Media.Camera.FlashOff
+        captureMode: Media.Camera.CaptureStillImage
+        focus.focusMode: Media.Camera.FocusContinuous
+        onError:
+        {
+            console.error("error: " + camera.errorString);
         }
     }
+
+
     Image
     {
         id: sight
@@ -110,6 +161,7 @@ Page
                 {
                     sight.source = "../images/sight-red.png"
                     weaponSound.play()
+                    target.flash()
                 }
                 else
                 {
@@ -120,15 +172,14 @@ Page
         }
     }
 
-    Image
-    {
-        id: target
-        source: "../images/grinch.png"
-        x: randomNumber(0, page.width - target.width)
-        y: page.height/2 - target.height/2
-        scale: 1
-
-    }
+//    Image
+//    {
+//        id: targetImage
+//        source: "../images/grinch.png"
+//        x: randomNumber(0, page.width - targetImage.width)
+//        y: page.height/2 - targetImage.height/2
+//        scale: 1
+//    }
 
     Media.SoundEffect
     {

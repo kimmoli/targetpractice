@@ -5,6 +5,7 @@
 #ifndef TARGET_H
 #define TARGET_H
 #include <QObject>
+#include <QThread>
 
 class Target : public QObject
 {
@@ -16,6 +17,8 @@ public:
     ~Target();
 
     QString readVersion();
+
+    Q_INVOKABLE void flash();
 
 signals:
     void versionChanged();
