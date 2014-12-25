@@ -10,7 +10,7 @@ ApplicationWindow
 {
     id: targetpractice
 
-    initialPage: Qt.resolvedUrl("pages/TargetPage.qml")
+    initialPage: Qt.resolvedUrl("pages/TargetPractice.qml")
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
 
     Target

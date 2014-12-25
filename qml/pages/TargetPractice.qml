@@ -6,6 +6,9 @@ Page
 {
     id: page
 
+    property real roll: 0.0
+    property real pitch: 0.0
+
     Sensors.Accelerometer
     {
         id: accel
@@ -14,8 +17,12 @@ Page
 
         onReadingChanged:
         {
-            var newX = (thisflake.x + calcRoll(accel.reading.x, accel.reading.y, accel.reading.z) * thisflake.sz/overdrive + (randomNumber(0,350)-175)/overdrive)
-            var newY = (thisflake.y - calcPitch(accel.reading.x, accel.reading.y, accel.reading.z) * thisflake.sz/overdrive + (randomNumber(0,350)-175)/overdrive)
+            roll = calcRoll(accel.reading.x, accel.reading.y, accel.reading.z)
+            pitch = calcPitch(accel.reading.x, accel.reading.y, accel.reading.z)
+
+            var newX = target.x + roll * 0.1
+            if (newX > 0 && newX < page.width-target.width)
+                target.x = newX
         }
     }
 
@@ -65,8 +72,51 @@ Page
                 title: "Target practice"
             }
             
-            
+            Slider
+            {
+                width: parent.width - 2*Theme.paddingLarge
+                anchors.horizontalCenter: parent.horizontalCenter
+                label: ""
+                minimumValue: 0
+                maximumValue: 180
+                value: roll + 90.0
+                valueText: roll.toFixed(2)
+            }
+            Slider
+            {
+                width: parent.width - 2*Theme.paddingLarge
+                anchors.horizontalCenter: parent.horizontalCenter
+                label: ""
+                minimumValue: 0
+                maximumValue: 180
+                value: pitch + 90.0
+                valueText: pitch.toFixed(2)
+            }
         }
-    }        
+    }
+    Image
+    {
+        id: sight
+        source: "../images/sight-white.png"
+
+        x: page.width/2 - sight.width/2
+        y: page.height/2 - sight.height/2
+
+        MouseArea
+        {
+            anchors.fill: parent
+            onPressed: sight.source = "../images/sight-red.png"
+            onReleased: sight.source = "../images/sight-white.png"
+        }
+    }
+
+    Image
+    {
+        id: target
+        source: "../images/grinch.png"
+        x: randomNumber(0, page.width - target.width)
+        y: randomNumber(0, page.height - target.height)
+        scale: 1
+    }
 
 }
