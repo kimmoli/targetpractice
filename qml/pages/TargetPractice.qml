@@ -1,13 +1,21 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import QtSensors 5.0 as Sensors
+import QtMultimedia 5.0 as Media
 
 Page 
 {
     id: page
+    allowedOrientations: Orientation.Landscape
 
     property real roll: 0.0
     property real pitch: 0.0
+
+    property var weapons: ["rifle", "shotgun", "raygun"]
+    property int currentWeapon: 0
+
+    property int hits: 0
+    property int misses: 0
 
     Sensors.Accelerometer
     {
@@ -20,7 +28,7 @@ Page
             roll = calcRoll(accel.reading.x, accel.reading.y, accel.reading.z)
             pitch = calcPitch(accel.reading.x, accel.reading.y, accel.reading.z)
 
-            var newX = target.x + roll * 0.1
+            var newX = target.x + pitch * -0.125
             if (newX > 0 && newX < page.width-target.width)
                 target.x = newX
         }
@@ -57,6 +65,11 @@ Page
                                               "name": "Target practice",
                                               "imagelocation": "/usr/share/icons/hicolor/86x86/apps/harbour-targetpractice.png"} )
             }
+            MenuItem
+            {
+                text: "Change weapon to " + weapons[(currentWeapon+1) % weapons.length]
+                onClicked: currentWeapon = (currentWeapon+1) % weapons.length
+            }
         }
 
         contentHeight: column.height
@@ -72,25 +85,10 @@ Page
                 title: "Target practice"
             }
             
-            Slider
+            Label
             {
-                width: parent.width - 2*Theme.paddingLarge
                 anchors.horizontalCenter: parent.horizontalCenter
-                label: ""
-                minimumValue: 0
-                maximumValue: 180
-                value: roll + 90.0
-                valueText: roll.toFixed(2)
-            }
-            Slider
-            {
-                width: parent.width - 2*Theme.paddingLarge
-                anchors.horizontalCenter: parent.horizontalCenter
-                label: ""
-                minimumValue: 0
-                maximumValue: 180
-                value: pitch + 90.0
-                valueText: pitch.toFixed(2)
+                text: roll.toFixed(2) + " " + pitch.toFixed(2)
             }
         }
     }
@@ -101,12 +99,24 @@ Page
 
         x: page.width/2 - sight.width/2
         y: page.height/2 - sight.height/2
+        z: 100
 
         MouseArea
         {
             anchors.fill: parent
-            onPressed: sight.source = "../images/sight-red.png"
-            onReleased: sight.source = "../images/sight-white.png"
+            onPressedChanged:
+            {
+                if (pressed)
+                {
+                    sight.source = "../images/sight-red.png"
+                    weaponSound.play()
+                }
+                else
+                {
+                    sight.source = "../images/sight-white.png"
+                    misses++
+                }
+            }
         }
     }
 
@@ -115,8 +125,47 @@ Page
         id: target
         source: "../images/grinch.png"
         x: randomNumber(0, page.width - target.width)
-        y: randomNumber(0, page.height - target.height)
+        y: page.height/2 - target.height/2
         scale: 1
+
     }
 
+    Media.SoundEffect
+    {
+        id: cheer
+        source: "../sounds/cheer.wav"
+    }
+
+    Media.SoundEffect
+    {
+        id: weaponSound
+        source: "../sounds/" + weapons[currentWeapon] + ".wav"
+    }
+
+    Media.SoundEffect
+    {
+        id: toke
+        source: "../sounds/toke.wav"
+    }
+
+    Timer
+    {
+        running: applicationActive && page.status === PageStatus.Active
+        repeat: true
+        interval: randomNumber(10000, 60000)
+        onTriggered:
+        {
+            interval = randomNumber(10000, 60000)
+            cheer.play()
+        }
+    }
+
+    onMissesChanged:
+    {
+        if (misses === 10)
+        {
+            toke.play()
+            misses = 0
+        }
+    }
 }

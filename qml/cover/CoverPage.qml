@@ -10,7 +10,12 @@ CoverBackground
     Image
     {
         anchors.centerIn: parent
-        source: "../pages/sc-snowflakes7.png"
+        source: "../images/grinch.png"
+        Image
+        {
+            anchors.centerIn: parent
+            source: "../images/sight-white.png"
+        }
     }
 }
 
