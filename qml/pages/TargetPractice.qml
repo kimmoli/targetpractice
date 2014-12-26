@@ -102,16 +102,34 @@ Page
             z: 2
         }
 
+        Rectangle
+        {
+            id: maskImage
+            width: 1400
+            height: 1400
+            color: "transparent"
+            Rectangle
+            {
+                anchors.centerIn: parent
+                width: 200
+                height: width
+                radius: width/2
+                color: "white"
+            }
+        }
+
         ShaderEffect
         {
             id: shader
 
             anchors.centerIn: parent
-            height: page.width
-            width: page.height
+            height: maskImage.height
+            width: maskImage.width
             rotation: -90
+            z: 3
 
-            property variant videoSource: ShaderEffectSource { sourceItem: videoPreview; hideSource: true }
+            property variant videoSource: ShaderEffectSource { sourceItem: videoPreview; hideSource: false }
+            property variant mask: ShaderEffectSource { sourceItem: maskImage; hideSource: true }
 
             smooth: false /* afaik this sets GL_NEAREST  (true sets GL_LINEAR) */
 
@@ -120,10 +138,12 @@ Page
                 varying highp vec2 qt_TexCoord0;
 
                 uniform sampler2D videoSource;
+                uniform sampler2D mask;
 
                 void main()
                 {
-                    gl_FragColor =  texture2D(videoSource, qt_TexCoord0);
+                    // gl_FragColor =  texture2D(videoSource, qt_TexCoord0);
+                    gl_FragColor = texture2D(videoSource, qt_TexCoord0.st) * (texture2D(mask, qt_TexCoord0.st).a);
                 }
                 "
         }
