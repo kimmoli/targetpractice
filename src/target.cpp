@@ -5,6 +5,7 @@
 #include "target.h"
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 Target::Target(QObject *parent) :
     QObject(parent)
